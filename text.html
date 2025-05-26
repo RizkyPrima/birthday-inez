@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>For You</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0a0a23;
+      color: white;
+      font-family: 'Courier New', monospace;
+      overflow-x: hidden;
+      text-align: center;
+    }
+
+    .container {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      max-width: 700px;
+      margin: 0 auto;
+      box-sizing: border-box;
+      z-index: 10;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      color: #00ffcc;
+      text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
+    }
+
+    .romantic-message {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      border-radius: 15px;
+      font-size: 1.3em;
+      line-height: 1.8;
+      color: #ffe6f0;
+      box-shadow: 0 0 15px rgba(255, 192, 203, 0.4);
+      margin-top: 20px;
+      white-space: pre-wrap;
+      text-align: left;
+      min-height: 350px; /* supaya ukuran stabil saat animasi */
+      position: relative;
+      border-right: 2px solid #ffe6f0; /* caret */
+      overflow-wrap: break-word;
+      overflow-x: hidden;
+      max-width: 100%;
+      animation: blinkCaret 0.75s step-end infinite;
+    }
+
+    @keyframes blinkCaret {
+      0%, 100% { border-color: transparent; }
+      50% { border-color: #ffe6f0; }
+    }
+
+    .btn-back {
+        display: inline-block;
+      margin: 50px auto;
+      padding: 12px 30px;
+      background: transparent;
+      color: #ff66cc;
+      border: 2px solid #ff66cc;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.2em;
+      transition: all 0.3s ease-in-out;
+      box-shadow: 0 0 10px #ff66cc, 0 0 20px #ff33aa;
+      position: relative;
+    }
+
+    .btn-back:hover {
+        background-color: #ff66cc;
+      color: white;
+      box-shadow:
+        0 0 10px #ff66cc,
+        0 0 20px #ff33aa,
+        0 0 30px #ff33aa,
+        0 0 40px #ff33aa;
+      transform: scale(1.05);
+    }
+
+    .btn-skip {
+        display: inline-block;
+      margin: 50px auto;
+      padding: 12px 30px;
+      background: transparent;
+      color: #ff66cc;
+      border: 2px solid #ff66cc;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.2em;
+      transition: all 0.3s ease-in-out;
+      box-shadow: 0 0 10px #ff66cc, 0 0 20px #ff33aa;
+      position: relative;
+    }
+
+    .btn-skip:hover {
+        background-color: #ff66cc;
+      color: white;
+      box-shadow:
+        0 0 10px #ff66cc,
+        0 0 20px #ff33aa,
+        0 0 30px #ff33aa,
+        0 0 40px #ff33aa;
+      transform: scale(1.05);
+    }
+
+    /* Firework */
+    .firework {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: explode 1.5s ease-out forwards;
+      pointer-events: none;
+      box-shadow:
+        0 0 10px currentColor,
+        0 0 20px currentColor,
+        0 0 30px currentColor,
+        0 0 40px currentColor;
+      z-index: 5;
+    }
+
+    @keyframes explode {
+      0% { transform: scale(0); opacity: 1; }
+      100% { transform: scale(6); opacity: 0; }
+    }
+
+    /* Heart */
+    @keyframes floatHeart {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-250px) scale(2); opacity: 0; }
+    }
+
+    .heart {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(45deg, #ff4081, #f50057);
+      transform: rotate(45deg);
+      animation: floatHeart 4s ease-out forwards;
+      pointer-events: none;
+      filter: drop-shadow(0 0 4px #f50057);
+      z-index: 5;
+    }
+
+    .heart::before,
+    .heart::after {
+      content: "";
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(45deg, #ff4081, #f50057);
+      border-radius: 50%;
+    }
+
+    .heart::before {
+      top: -20px;
+      left: 0;
+    }
+
+    .heart::after {
+      top: 0;
+      left: -20px;
+    }
+
+    /* Responsive font sizes */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2em;
+      }
+      .romantic-message {
+        font-size: 1.1em;
+        padding: 20px;
+        min-height: 300px;
+      }
+      .btn-back {
+        padding: 10px 20px;
+      }
+      .btn-skip {
+        font-size: 0.9em;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>For You, My Love</h1>
+
+    <div id="romantic-message" class="romantic-message"></div>
+    <button id="skipBtn" class="btn-skip">Skip Typing</button>
+  </div>
+
+  <script>
+    const text = `Selamat ulang tahun pacarku, sahabatku, kekasihku, partner berantemku, partner bertukar pikiran, cinta kasihku, pujaan hatiku, teman mesraku 🥰🥰🥰.
+
+Semoga segala sesuatu mu dilancarkan, diberikan kemudahan, lancar sidangmu sayang, dan dikabulkan semua doa-doa yang kamu langitkan di tiap ibadahmu.
+
+Love you sayang ❤️❤️❤️
+
+Hari ini bukan hanya tentang ulang tahunmu, tapi juga tentang betapa beruntungnya aku karena memilikimu.
+
+Setiap tawa dan tangismu jadi bagian dari kisah yang sangat aku syukuri.
+
+Kamu bukan hanya seseorang yang aku cinta, kamu adalah rumah, tempat paling nyaman untuk pulang. 💖
+
+Semoga hidupmu selalu dikelilingi cahaya dan kebahagiaan, Love you more, more and more 💖💖💖💖`;
+
+    const container = document.getElementById('romantic-message');
+    const skipBtn = document.getElementById('skipBtn');
+
+    let index = 0;
+    let typingInterval;
+
+    function typeWriter() {
+      if (index < text.length) {
+        if (text[index] === '\n') {
+          container.innerHTML += '<br>';
+        } else {
+          container.innerHTML += text[index];
+        }
+        index++;
+      } else {
+        clearInterval(typingInterval);
+        container.style.borderRight = 'none';
+        skipBtn.style.display = 'none';
+      }
+    }
+
+    function startTyping() {
+      typingInterval = setInterval(typeWriter, 100); // 1000ms = 1 detik per huruf
+    }
+
+    function skipTyping() {
+      clearInterval(typingInterval);
+      // langsung tampilkan semua text sekaligus
+      container.innerHTML = text.replace(/\n/g, '<br>');
+      container.style.borderRight = 'none';
+      skipBtn.style.display = 'none';
+    }
+
+    skipBtn.addEventListener('click', skipTyping);
+
+    window.onload = () => {
+      container.innerHTML = ''; // kosongkan dulu
+      skipBtn.style.display = 'inline-block';
+      startTyping();
+    };
+
+    // Fireworks & Hearts (optional)
+    function spawnFirework() {
+      const firework = document.createElement('div');
+      firework.className = 'firework';
+      firework.style.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
+      firework.style.left = `${Math.random() * window.innerWidth}px`;
+      firework.style.top = `${Math.random() * window.innerHeight * 0.6}px`;
+      document.body.appendChild(firework);
+      setTimeout(() => firework.remove(), 1500);
+    }
+
+    function spawnHeart() {
+      const heart = document.createElement('div');
+      heart.className = 'heart';
+      heart.style.left = `${Math.random() * (window.innerWidth - 60)}px`;
+      heart.style.top = `${window.innerHeight}px`;
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 4000);
+    }
+
+    setInterval(spawnFirework, 500);
+    setInterval(spawnHeart, 800);
+  </script>
+</body>
+</html>

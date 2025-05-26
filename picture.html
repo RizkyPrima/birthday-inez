@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gallery - My Loph Inez Claudia Togatorop</title>
+  <style>
+    /* Body dan Background */
+    body {
+      margin: 0;
+      padding: 0;
+      background: #0a0a23; /* background gelap */
+      color: white;
+      font-family: 'Courier New', monospace;
+      overflow-x: hidden;
+      text-align: center;
+      position: relative;
+      min-height: 100vh;
+      z-index: 0; /* supaya canvas di atas background tapi di bawah konten */
+    }
+
+    /* Canvas Fireworks - full layar, di belakang konten */
+    #fireworks {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0; /* di bawah konten */
+    }
+
+    /* Kontainer konten utama */
+    .container {
+      position: relative;
+      z-index: 1; /* di atas canvas */
+      padding: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    /* Judul */
+    h1 {
+      font-size: 3em;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #ff66cc, 0 0 20px #ff66cc;
+    }
+
+    /* Subtitle Neon */
+    .neon-subtitle {
+      font-size: 1.8em;
+      color: #ff66cc;
+      text-shadow:
+        0 0 5px #ff66cc,
+        0 0 10px #ff66cc,
+        0 0 20px #ff66cc,
+        0 0 40px #ff33aa;
+      margin-bottom: 30px;
+      animation: neon-flicker 1.5s infinite;
+    }
+
+    @keyframes neon-flicker {
+      0%, 100% {opacity: 1;}
+      50% {opacity: 0.6;}
+    }
+
+    /* Gallery grid */
+    .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 20px;
+      justify-content: center;
+    }
+
+    .gallery img {
+      width: 200px;
+      height: 150px;
+      object-fit: cover;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      transition: transform 0.3s ease;
+      cursor: pointer;
+    }
+
+    .gallery img:hover {
+      transform: scale(1.05);
+      box-shadow:
+        0 0 12px #ff99dd,
+        0 0 25px #ff66cc,
+        0 0 45px #ff33aa;
+    }
+
+    /* Lightbox */
+    .lightbox {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(10,10,35,0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      cursor: pointer;
+      flex-direction: column;
+    }
+
+    .lightbox.active {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .lightbox img {
+      max-width: 90%;
+      max-height: 80vh;
+      border-radius: 15px;
+      box-shadow:
+        0 0 20px #ff66cc,
+        0 0 40px #ff33aa;
+      pointer-events: none;
+    }
+
+    /* Romantic Text di lightbox */
+    .lightbox .romantic-text {
+      margin-top: 20px;
+      color: #ff66cc;
+      font-size: 1.8em;
+      font-weight: bold;
+      text-shadow:
+        0 0 10px #ff66cc,
+        0 0 20px #ff33aa;
+      user-select: none;
+      pointer-events: none;
+      white-space: nowrap;
+      animation: neon-flicker 1.5s infinite;
+    }
+
+    /* Romantic Text default (tengah layar) */
+    #romanticText {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: black;
+      font-size: 2em;
+      font-weight: bold;
+      text-shadow: 0 0 10px white;
+      pointer-events: none;
+      user-select: none;
+      white-space: nowrap;
+      z-index: 2;
+    }
+
+    /* Back Button */
+    .back-button {
+      display: inline-block;
+      margin: 50px auto;
+      padding: 12px 30px;
+      background: transparent;
+      color: #ff66cc;
+      border: 2px solid #ff66cc;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.2em;
+      transition: all 0.3s ease-in-out;
+      box-shadow: 0 0 10px #ff66cc, 0 0 20px #ff33aa;
+      position: relative;
+      z-index: 15; /* pastikan di atas fireworks */
+    }
+
+    .back-button:hover {
+      background-color: #ff66cc;
+      color: white;
+      box-shadow:
+        0 0 10px #ff66cc,
+        0 0 20px #ff33aa,
+        0 0 30px #ff33aa,
+        0 0 40px #ff33aa;
+      transform: scale(1.05);
+    }
+
+    /* Loader container */
+    #loader {
+      position: fixed;
+      z-index: 9999;
+      background-color: #0f0f1f;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    /* Loading wrapper */
+    .loading-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Bar container */
+    .loading-bar-container {
+      width: 300px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 10px #ff66cc33;
+      margin-bottom: 20px;
+    }
+
+    /* Heart neon pulse */
+    .neon-heart {
+      font-size: 3em;
+      margin-bottom: 20px;
+      color: #ff66cc;
+      text-shadow: 
+        0 0 10px #ff66cc, 
+        0 0 20px #ff66cc, 
+        0 0 30px #ff99dd;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
+    /* Loading bar */
+    .loading-bar {
+      height: 100%;
+      width: 0%;
+      background: #ff66cc;
+      box-shadow: 0 0 10px #ff66cc, 0 0 20px #ff99dd;
+      border-radius: 10px;
+      animation: loadingFill 1.5s forwards ease-in-out;
+    }
+
+    @keyframes loadingFill {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+
+    /* Hide loader after complete */
+    body.loaded #loader {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    /* Firework styles (for div firework pieces - not canvas) */
+    .firework {
+      position: fixed;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .firework-piece {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      background: #ff66cc;
+      border-radius: 50%;
+      box-shadow:
+        0 0 8px #ff66cc,
+        0 0 15px #ff33aa;
+      opacity: 1;
+      animation: firework-move 1s forwards ease-out;
+    }
+
+    @keyframes firework-move {
+      0% {
+        transform: translate(0,0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--x), var(--y)) scale(0);
+        opacity: 0;
+      }
+    }
+
+    /* Love animation */
+    .love {
+      position: fixed;
+      font-size: 2rem;
+      color: #ff66cc;
+      text-shadow:
+        0 0 10px #ff66cc,
+        0 0 20px #ff33aa;
+      animation: love-rise 3s ease-in forwards;
+      pointer-events: none;
+      z-index: 6;
+    }
+
+    @keyframes love-rise {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-150px) scale(1.5);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="loader">
+    <div class="loading-wrapper">
+      <div class="neon-heart">❤️</div>
+      <div class="loading-bar-container">
+        <div class="loading-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="fireworks"></canvas>
+
+    <div class="container">
+        <div class="neon-subtitle">Pap Imoetzzz 22 th mu ixix</div>
+
+        <div class="gallery">
+        <img src="images/photo(1).jpg" alt="Foto 1" />
+        <img src="images/photo(2).jpg" alt="Foto 2" />
+        <img src="images/photo(3).jpg" alt="Foto 3" />
+        <img src="images/photo(4).jpg" alt="Foto 4" />
+        <img src="images/photo(5).jpg" alt="Foto 5" />
+        <img src="images/photo(6).jpg" alt="Foto 6" />
+        <img src="images/photo(7).jpg" alt="Foto 7" />
+        <img src="images/photo(8).jpg" alt="Foto 8" />
+        <img src="images/photo(9).jpg" alt="Foto 9" />
+        <img src="images/photo(10).jpg" alt="Foto 10" />
+        <img src="images/photo(11).jpg" alt="Foto 11" />
+        <img src="images/photo(12).jpg" alt="Foto 12" />
+        <img src="images/photo(13).jpg" alt="Foto 13" />
+        <img src="images/photo(14).jpg" alt="Foto 14" />
+        </div>
+    </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox">
+    <img src="" alt="Expanded Photo" />
+    <div class="romantic-text"></div>
+  </div>
+
+  <script>
+    // Loader handling
+    window.addEventListener('load', () => {
+      document.body.classList.add('loaded');
+    });
+
+    // Fireworks canvas
+    (() => {
+      const canvas = document.getElementById('fireworks');
+      const ctx = canvas.getContext('2d');
+      let cw, ch;
+
+      function resize() {
+        cw = canvas.width = window.innerWidth;
+        ch = canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      class Firework {
+        constructor(sx, sy, tx, ty) {
+          this.x = sx;
+          this.y = sy;
+          this.sx = sx;
+          this.sy = sy;
+          this.tx = tx;
+          this.ty = ty;
+          this.distanceToTarget = dist(sx, sy, tx, ty);
+          this.distanceTraveled = 0;
+          this.coordinates = [];
+          this.coordinateCount = 3;
+          while(this.coordinateCount--) {
+            this.coordinates.push([this.x, this.y]);
+          }
+          this.angle = Math.atan2(ty - sy, tx - sx);
+          this.speed = 5;
+          this.acceleration = 1.05;
+          this.brightness = random(50, 70);
+          this.targetRadius = 1;
+        }
+
+        update(index) {
+          this.coordinates.pop();
+          this.coordinates.unshift([this.x, this.y]);
+
+          if (this.targetRadius < 8) {
+            this.targetRadius += 0.3;
+          } else {
+            this.targetRadius = 1;
+          }
+
+          this.speed *= this.acceleration;
+          let vx = Math.cos(this.angle) * this.speed;
+          let vy = Math.sin(this.angle) * this.speed;
+          this.distanceTraveled = dist(this.sx, this.sy, this.x + vx, this.y + vy);
+
+          if (this.distanceTraveled >= this.distanceToTarget) {
+            fireworks.splice(index, 1);
+            createParticles(this.tx, this.ty);
+          } else {
+            this.x += vx;
+            this.y += vy;
+          }
+        }
+
+        draw() {
+          ctx.beginPath();
+          ctx.moveTo(this.coordinates[this.coordinates.length -1][0], this.coordinates[this.coordinates.length -1][1]);
+          ctx.lineTo(this.x, this.y);
+          ctx.strokeStyle = `hsl(${random(0, 360)}, 100%, ${this.brightness}%)`;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(this.tx, this.ty, this.targetRadius, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      class Particle {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.coordinates = [];
+          this.coordinateCount = 5;
+          while(this.coordinateCount--) {
+            this.coordinates.push([this.x, this.y]);
+          }
+          this.angle = random(0, Math.PI * 2);
+          this.speed = random(1, 10);
+          this.friction = 0.95;
+          this.gravity = 0.7;
+          this.hue = random(0, 360);
+          this.brightness = random(50, 80);
+          this.alpha = 1;
+          this.decay = random(0.015, 0.03);
+        }
+
+        update(index) {
+          this.coordinates.pop();
+          this.coordinates.unshift([this.x, this.y]);
+          this.speed *= this.friction;
+          this.x += Math.cos(this.angle) * this.speed;
+          this.y += Math.sin(this.angle) * this.speed + this.gravity;
+          this.alpha -= this.decay;
+
+          if (this.alpha <= 0) {
+            particles.splice(index, 1);
+          }
+        }
+
+        draw() {
+          ctx.beginPath();
+          ctx.moveTo(this.coordinates[this.coordinates.length -1][0], this.coordinates[this.coordinates.length -1][1]);
+          ctx.lineTo(this.x, this.y);
+          ctx.strokeStyle = `hsla(${this.hue}, 100%, ${this.brightness}%, ${this.alpha})`;
+          ctx.stroke();
+        }
+      }
+
+      function random(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      function dist(x1, y1, x2, y2) {
+        return Math.sqrt((x2 - x1)**2 + (y2 - y1)**2);
+      }
+
+      let fireworks = [];
+      let particles = [];
+      let lastTime = 0;
+      let timerTick = 0;
+      let timerTotal = 80;
+
+      function createParticles(x, y) {
+        for (let i=0; i<30; i++) {
+          particles.push(new Particle(x, y));
+        }
+      }
+
+      function loop(time = 0) {
+        requestAnimationFrame(loop);
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(0,0,cw,ch);
+        ctx.globalCompositeOperation = 'lighter';
+
+        if (timerTick >= timerTotal) {
+          if (fireworks.length < 5) {
+            let startX = cw / 2;
+            let startY = ch;
+            let targetX = random(0, cw);
+            let targetY = random(0, ch / 2);
+            fireworks.push(new Firework(startX, startY, targetX, targetY));
+            timerTick = 0;
+          }
+        } else {
+          timerTick++;
+        }
+
+        for (let i=fireworks.length-1; i>=0; i--) {
+          fireworks[i].draw();
+          fireworks[i].update(i);
+        }
+        for (let i=particles.length-1; i>=0; i--) {
+          particles[i].draw();
+          particles[i].update(i);
+        }
+      }
+
+      loop();
+    })();
+
+    // Romantic phrases array
+    const romanticPhrases = [
+      "You’re my everything ❤️",
+      "Endless true love 🌹",
+      "You complete me 💖",
+      "My only one 💓",
+      "Forever and always 💞",
+      "Love you more 🌙",
+      "My sweet sunshine ☀️",
+      "Only for you 🥰",
+      "You and me 💘"
+    ];
+
+    // Lightbox logic
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImage = lightbox.querySelector('img');
+    const romanticTextDiv = lightbox.querySelector('.romantic-text');
+    const galleryImages = document.querySelectorAll('.gallery img');
+
+    galleryImages.forEach(img => {
+      img.addEventListener('click', () => {
+        lightboxImage.src = img.src;
+        const randomIndex = Math.floor(Math.random() * romanticPhrases.length);
+        romanticTextDiv.textContent = romanticPhrases[randomIndex];
+        lightbox.classList.add('active');
+        // Disable scroll while lightbox active
+        document.body.style.overflow = 'hidden';
+      });
+    });
+    
+    // Close lightbox on background or romantic text click
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox || e.target === romanticTextDiv) {
+        lightbox.classList.remove('active');
+        lightboxImage.src = '';
+        romanticTextDiv.textContent = '';
+        document.body.style.overflow = ''; // restore scroll
+      }
+    });
+  </script>
+</body>
+</html>
