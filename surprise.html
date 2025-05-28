@@ -132,10 +132,6 @@
       background: white;
     }
 
-    #gameFrame {
-      max-height: 90vh;
-    }
-
     .back-home {
       margin-top: 40px;
       display: inline-block;
@@ -156,39 +152,24 @@
       box-shadow: 0 0 20px #ff33aa;
     }
 
-
-    .heart {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(45deg, #ff4081, #f50057);
-      transform: rotate(45deg);
-      animation: floatHeart 4s ease-out forwards;
-      filter: drop-shadow(0 0 4px #f50057);
+    .music-button {
+      margin-bottom: 20px;
+      background: transparent;
+      border: 2px solid #ff66cc;
+      color: #ff66cc;
+      padding: 10px 20px;
+      font-size: 1em;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 0 10px #ff66cc;
     }
 
-    .heart::before,
-    .heart::after {
-      content: "";
-      position: absolute;
-      width: 40px;
-      height: 40px;
-      background: inherit;
-      border-radius: 50%;
-    }
-
-    .heart::before {
-      top: -20px;
-      left: 0;
-    }
-
-    .heart::after {
-      top: 0;
-      left: -20px;
-    }
-
-    @keyframes floatHeart {
-      0% { transform: translateY(0) scale(1); opacity: 1; }
-      100% { transform: translateY(-250px) scale(2); opacity: 0; }
+    .music-button:hover {
+      background: #ff66cc;
+      color: white;
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #ff33aa;
     }
   </style>
 </head>
@@ -204,10 +185,18 @@
   <div class="container">
     <h2>My Loph Inez Claudia Togatorop 💖</h2>
 
+    <!-- 🎵 Tombol Musik -->
+    <button class="music-button" onclick="toggleMusic()">🎵 Play Music</button>
+    <audio id="bgMusic" loop>
+      <source src="music/music.mp3" type="audio/mpeg">
+      Your browser does not support the audio tag.
+    </audio>
+
     <div class="nav-buttons">
       <button onclick="showSection('message')">💌 Pesan</button>
       <button onclick="showSection('album')">📸 Foto</button>
       <button onclick="showSection('video')">📹 Video</button>
+      <button onclick="showSection('game')">🎮 Main Game</button>
     </div>
 
     <div id="message" class="section">
@@ -222,6 +211,10 @@
       <iframe src="video.html"></iframe>
     </div>
 
+    <!-- 🎮 Game Section -->
+    <div id="game" class="section">
+      <iframe id="game-frame" src="game.html" width="400" height="600" frameborder="0"></iframe>
+    </div>
 
     <a href="index.html" class="back-home">Back to Home</a>
   </div>
@@ -230,6 +223,24 @@
     function showSection(id) {
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
       document.getElementById(id).classList.add('active');
+
+      // Reload iframe game if it's the game section
+      if (id === "game") {
+        const iframe = document.getElementById("game-frame");
+        iframe.contentWindow.location.reload();
+      }
+    }
+
+    function toggleMusic() {
+      const audio = document.getElementById('bgMusic');
+      const button = document.querySelector('.music-button');
+      if (audio.paused) {
+        audio.play();
+        button.textContent = '⏸ Pause Music';
+      } else {
+        audio.pause();
+        button.textContent = '🎵 Play Music';
+      }
     }
   </script>
 </body>
