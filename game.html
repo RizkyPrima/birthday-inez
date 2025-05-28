@@ -1,346 +1,302 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tetris for My Love</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heart Catcher Game</title>
   <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
-      margin: 0;
-      padding: 0;
-      background-color: #0a0a23;
-      font-family: 'Courier New', monospace;
-      color: white;
+      width: 100%;
+      height: 100%;
+      background: #0a0a23;
       overflow: hidden;
+      font-family: 'Courier New', monospace;
     }
-
     body {
+      position: relative;
       display: flex;
-      flex-direction: column;
-      align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      align-items: center;
+      flex-direction: column;
+      padding-bottom: 80px; /* space for mobile controls */
     }
 
-    h1 {
-      font-size: 2em;
-      color: #ff66cc;
-      margin-top: 20px;
+    #gameCanvas {
+      background: #1a1a3d;
+      border: 2px solid #ff66cc;
+      aspect-ratio: 2 / 3;
+      max-height: 100vh;
+      max-width: 100vw;
+      display: block;
+      margin: auto;
+      transition: all 0.3s ease;
     }
 
-    canvas {
-      background-color: #111;
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
       display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+      z-index: 10;
     }
 
-    .btns, .controls {
-      margin-top: 15px;
+    #overlay h1 {
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .overlay-buttons {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
       justify-content: center;
+      margin-top: 1rem;
     }
 
-    button {
-      background: transparent;
-      border: 2px solid #ff66cc;
-      color: #ff66cc;
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
-      user-select: none;
-    }
-
-    button:hover {
+    .overlay-buttons button,
+    .mobile-controls button {
       background: #ff66cc;
-      color: #fff;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.3rem;
+      font-size: 1rem;
+      border-radius: 10px;
+      cursor: pointer;
     }
 
-    #gameOverModal {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: #111;
-      border: 3px solid #ffcc00;
-      padding: 30px;
-      border-radius: 15px;
-      text-align: center;
-      color: #33ff77;
-      display: none;
-      z-index: 999;
+    .overlay-buttons button:hover,
+    .mobile-controls button:hover {
+      background: #ff1493;
     }
 
-    #gameOverModal h2 {
-      color: #ffff00;
-      font-size: 1.5em;
-      margin-bottom: 10px;
-    }
-
-    #gameOverModal p {
-      font-size: 1.1em;
-    }
-
-    #gameOverModal span {
-      color: #ff66cc;
-      font-size: 1.4em;
-      display: block;
-      margin-top: 10px;
-    }
-
-    #overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.6);
-      z-index: 998;
-      display: none;
-    }
-
-    .controls button {
-      width: 60px;
-      height: 60px;
-      font-size: 1.2em;
-      border-radius: 50%;
+    .mobile-controls {
+      position: absolute;
+      bottom: 10px;
       display: flex;
-      align-items: center;
       justify-content: center;
+      gap: 20px;
+      z-index: 5;
+    }
+
+    .mobile-controls button {
+      width: 60px;
+    }
+
+    @media (min-width: 768px) {
+      .mobile-controls {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Tetris for My Love 💖</h1>
-  <canvas id="tetris"></canvas>
 
-  <div class="btns">
-    <button onclick="startGame()">Start</button>
-    <button onclick="stopGame()">Stop</button>
-    <button onclick="goHome()">Home</button>
-    <button onclick="toggleGame()">Game</button>
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
+
+  <!-- Mobile Controls -->
+  <div class="mobile-controls">
+    <button id="leftBtn">←</button>
+    <button id="rightBtn">→</button>
   </div>
 
-  <div class="controls">
-    <button onclick="move(-1)">L</button>
-    <button onclick="drop()">D</button>
-    <button onclick="rotatePiece()">ROT</button>
-    <button onclick="move(1)">R</button>
-  </div>
-
-  <div id="overlay"></div>
-  <div id="gameOverModal">
-    <h2>INGET YA!</h2>
-    <p>walaupun kamu kalah, tapi kamu selalu menang kok di hati aku, HEHE ^_^</p>
-    <span>I LOVE YOU &lt;3</span>
-    <br />
-    <button onclick="restartGame()">Main Lagi</button>
+  <div id="overlay">
+    <h1 id="resultMessage"></h1>
+    <div class="overlay-buttons" id="initialButtons">
+      <button onclick="handleOk()">OK</button>
+    </div>
+    <div class="overlay-buttons" id="finalButtons" style="display: none;">
+      <button onclick="restartGame()">Main Lagi</button>
+    </div>
   </div>
 
   <script>
-    const canvas = document.getElementById('tetris');
-    const context = canvas.getContext('2d');
-    let scaleFactor = 20;
+    const baseWidth = 400;
+    const baseHeight = 600;
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('overlay');
+    const resultMessage = document.getElementById('resultMessage');
+    const initialButtons = document.getElementById('initialButtons');
+    const finalButtons = document.getElementById('finalButtons');
+
+    const baseBasket = {
+      x: 160,
+      y: 550,
+      width: 80,
+      height: 20,
+      speed: 5
+    };
+
+    let basket = { ...baseBasket };
+    const hearts = [];
+    let keys = {};
+    let score = 0;
+    let missed = 0;
+    let gameOver = false;
+    let loseMode = false;
+    let paused = false;
+
+    function getScale() {
+      return {
+        scaleX: canvas.width / baseWidth,
+        scaleY: canvas.height / baseHeight
+      };
+    }
 
     function resizeCanvas() {
-      canvas.width = 240;
-      canvas.height = 400;
-      context.setTransform(scaleFactor, 0, 0, scaleFactor, 0, 0);
+      const containerWidth = window.innerWidth;
+      const containerHeight = window.innerHeight - 100; // space for mobile controls
+      const aspectRatio = 2 / 3;
+
+      let width = containerWidth;
+      let height = containerWidth / aspectRatio;
+
+      if (height > containerHeight) {
+        height = containerHeight;
+        width = height * aspectRatio;
+      }
+
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
+      canvas.width = width;
+      canvas.height = height;
     }
+
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      restartGame();
+    });
 
     resizeCanvas();
 
-    const colors = [
-      null,
-      '#00f7ff', '#ff66cc', '#ffcc00', '#00ff00', '#ff0000', '#0000ff', '#ff6600'
-    ];
-
-    const tetrominoes = [
-      [[1, 1, 1], [0, 1, 0]],
-      [[2, 2], [2, 2]],
-      [[0, 3, 3], [3, 3, 0]],
-      [[4, 4, 0], [0, 4, 4]],
-      [[5, 0, 0], [5, 5, 5]],
-      [[0, 0, 6], [6, 6, 6]],
-      [[7, 7, 7, 7]]
-    ];
-
-    const arena = createMatrix(12, 20);
-
-    function createMatrix(w, h) {
-      const matrix = [];
-      while (h--) matrix.push(new Array(w).fill(0));
-      return matrix;
+    function drawBasket() {
+      const { scaleX, scaleY } = getScale();
+      ctx.fillStyle = '#ff66cc';
+      ctx.fillRect(
+        basket.x * scaleX,
+        basket.y * scaleY,
+        basket.width * scaleX,
+        basket.height * scaleY
+      );
     }
 
-    function collide(arena, player) {
-      const [m, o] = [player.matrix, player.pos];
-      for (let y = 0; y < m.length; ++y) {
-        for (let x = 0; x < m[y].length; ++x) {
-          if (m[y][x] !== 0 &&
-              (arena[y + o.y] &&
-               arena[y + o.y][x + o.x]) !== 0) {
-            return true;
+    function drawHeart(heart) {
+      const { scaleX, scaleY } = getScale();
+      const fontSize = 24 * ((scaleX + scaleY) / 2);
+      ctx.font = `${fontSize}px Arial`;
+      ctx.fillText('❤️', heart.x * scaleX, heart.y * scaleY);
+    }
+
+    function drawScore() {
+      ctx.fillStyle = '#fff';
+      const { scaleX, scaleY } = getScale();
+      const fontSize = 16 * ((scaleX + scaleY) / 2);
+      ctx.font = `${fontSize}px monospace`;
+      ctx.fillText(`❤️: ${score}   💔: ${missed}`, 10 * scaleX, 20 * scaleY);
+    }
+
+    function update() {
+      if (paused || gameOver) return;
+
+      if (keys['ArrowLeft'] && basket.x > 0) basket.x -= basket.speed;
+      if (keys['ArrowRight'] && basket.x + basket.width < baseWidth) basket.x += basket.speed;
+
+      if (Math.random() < 0.02) {
+        hearts.push({ x: Math.random() * (baseWidth - 24), y: -24 });
+      }
+
+      for (let i = 0; i < hearts.length; i++) {
+        hearts[i].y += 3;
+        if (
+          hearts[i].y + 24 >= basket.y &&
+          hearts[i].x > basket.x &&
+          hearts[i].x < basket.x + basket.width
+        ) {
+          hearts.splice(i, 1);
+          score++;
+          i--;
+          if (score >= 10) {
+            showOverlay('Kamu menang! Tapi lebih dari itu, kamu selalu menangin hati aku tiap hari ❤️');
+            gameOver = true;
+          }
+        } else if (hearts[i].y > baseHeight) {
+          hearts.splice(i, 1);
+          missed++;
+          i--;
+          if (missed >= 5) {
+            gameOver = true;
+            loseMode = true;
+            resultMessage.innerText = 'Walaupun kamu kalah, tapi kamu selalu menang kok di hati aku, HEHE ^_^ 💞';
+            overlay.style.display = 'flex';
+            initialButtons.style.display = 'flex';
+            finalButtons.style.display = 'none';
           }
         }
       }
-      return false;
-    }
-
-    function merge(arena, player) {
-      player.matrix.forEach((row, y) => {
-        row.forEach((value, x) => {
-          if (value !== 0) {
-            arena[y + player.pos.y][x + player.pos.x] = value;
-          }
-        });
-      });
-    }
-
-    function playerReset() {
-      player.matrix = createPiece();
-      player.pos.y = 0;
-      player.pos.x = (arena[0].length / 2 | 0) -
-                     (player.matrix[0].length / 2 | 0);
-    }
-
-    function createPiece() {
-      const index = (Math.random() * tetrominoes.length) | 0;
-      return tetrominoes[index].map(row => row.slice());
-    }
-
-    function drawMatrix(matrix, offset) {
-      matrix.forEach((row, y) => {
-        row.forEach((value, x) => {
-          if (value !== 0) {
-            context.fillStyle = colors[value];
-            context.fillRect(x + offset.x,
-                             y + offset.y,
-                             1, 1);
-          }
-        });
-      });
     }
 
     function draw() {
-      context.fillStyle = '#111';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      drawMatrix(arena, {x: 0, y: 0});
-      drawMatrix(player.matrix, player.pos);
+      if (paused) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBasket();
+      hearts.forEach(drawHeart);
+      drawScore();
     }
 
-    function playerDrop() {
-      player.pos.y++;
-      if (collide(arena, player)) {
-        player.pos.y--;
-        merge(arena, player);
-        playerReset();
-        if (collide(arena, player)) {
-          gameOver();
-        }
-      }
-      dropCounter = 0;
-    }
-
-    function playerMove(dir) {
-      player.pos.x += dir;
-      if (collide(arena, player)) player.pos.x -= dir;
-    }
-
-    function rotateMatrix(matrix) {
-      for (let y = 0; y < matrix.length; ++y) {
-        for (let x = 0; x < y; ++x) {
-          [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
-        }
-      }
-      matrix.forEach(row => row.reverse());
-    }
-
-    function rotatePiece() {
-      const pos = player.pos.x;
-      let offset = 1;
-      rotateMatrix(player.matrix);
-      while (collide(arena, player)) {
-        player.pos.x += offset;
-        offset = -(offset + (offset > 0 ? 1 : -1));
-        if (offset > player.matrix[0].length) {
-          rotateMatrix(player.matrix);
-          rotateMatrix(player.matrix);
-          rotateMatrix(player.matrix);
-          player.pos.x = pos;
-          return;
-        }
-      }
-    }
-
-    let dropCounter = 0;
-    let dropInterval = 700;
-    let lastTime = 0;
-    let animationId;
-
-    const player = {
-      pos: {x: 0, y: 0},
-      matrix: null,
-    };
-
-    function update(time = 0) {
-      const deltaTime = time - lastTime;
-      lastTime = time;
-      dropCounter += deltaTime;
-      if (dropCounter > dropInterval) {
-        playerDrop();
-      }
-      draw();
-      animationId = requestAnimationFrame(update);
-    }
-
-    function startGame() {
-      resizeCanvas();
-      canvas.style.display = 'block';
-      resetArena();
-      playerReset();
-      lastTime = 0;
-      dropCounter = 0;
-      cancelAnimationFrame(animationId);
+    function gameLoop() {
       update();
+      draw();
+      if (!paused) requestAnimationFrame(gameLoop);
     }
 
-    function stopGame() {
-      cancelAnimationFrame(animationId);
-    }
-
-    function resetArena() {
-      for (let y = 0; y < arena.length; ++y) {
-        arena[y].fill(0);
-      }
-    }
-
-    function gameOver() {
-      stopGame();
-      document.getElementById('overlay').style.display = 'block';
-      document.getElementById('gameOverModal').style.display = 'block';
+    function showOverlay(message) {
+      resultMessage.innerText = message;
+      overlay.style.display = 'flex';
+      initialButtons.style.display = 'none';
+      finalButtons.style.display = 'flex';
     }
 
     function restartGame() {
-      document.getElementById('overlay').style.display = 'none';
-      document.getElementById('gameOverModal').style.display = 'none';
-      startGame();
+      score = 0;
+      missed = 0;
+      hearts.length = 0;
+      basket = { ...baseBasket };
+      gameOver = false;
+      loseMode = false;
+      paused = false;
+      overlay.style.display = 'none';
+      resizeCanvas();
+      gameLoop();
     }
 
-    function goHome() {
-      window.location.href = 'surprise.html'; // Sesuaikan jika ada halaman utama
+    function handleOk() {
+      resultMessage.innerText = '💔💔 GAME OVER 💔💔';
+      initialButtons.style.display = 'none';
+      finalButtons.style.display = 'flex';
     }
 
-    function toggleGame() {
-      canvas.style.display = canvas.style.display === 'block' ? 'none' : 'block';
-    }
+    window.addEventListener('keydown', (e) => keys[e.key] = true);
+    window.addEventListener('keyup', (e) => keys[e.key] = false);
 
-    function move(dir) {
-      playerMove(dir);
-    }
+    // Mobile Controls
+    document.getElementById('leftBtn').addEventListener('touchstart', () => keys['ArrowLeft'] = true);
+    document.getElementById('leftBtn').addEventListener('touchend', () => keys['ArrowLeft'] = false);
+    document.getElementById('rightBtn').addEventListener('touchstart', () => keys['ArrowRight'] = true);
+    document.getElementById('rightBtn').addEventListener('touchend', () => keys['ArrowRight'] = false);
 
-    function drop() {
-      playerDrop();
-    }
+    restartGame();
   </script>
 </body>
 </html>
